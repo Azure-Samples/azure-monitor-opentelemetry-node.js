@@ -1,0 +1,45 @@
+version: '3'
+volumes:
+  my-db:
+services:
+  # MySQL
+  mysql:
+    ports:
+      - "3306:3306"
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpassword
+      MYSQL_ROOT_PASSWORD: testpassword
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: opentelemetry-tests
+    volumes:
+      - my-db:/var/lib/mysql
+
+  # REDIS
+  redis:
+    image: redis
+    ports:
+      - '6379:6379'
+  
+  # Collector
+  otel-collector:
+    image: otel/opentelemetry-collector:0.27.0
+    command: ["--config=/conf/collector-config.yaml", "--log-level=DEBUG"]
+    volumes:
+      - ./collector-config.yaml:/conf/collector-config.yaml
+    ports:
+      - "9464:9464"
+      - "4317:4317"
+      - "55681:55681"
+    depends_on:
+      - jaeger-all-in-one
+
+  # Jaeger
+  jaeger-all-in-one:
+    image: jaegertracing/all-in-one:1.22.0
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "14250"
