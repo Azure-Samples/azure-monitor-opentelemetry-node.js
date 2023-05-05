@@ -10,43 +10,30 @@ This project framework provides the following features:
 * Feature 2
 * ...
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+* Make sure you have `tsc`, `grunt`, `mocha`, and `docker` installed globally.
 
-(ideally very short, if any)
+## How to run the sample app
 
-- OS
-- Library version
-- ...
+1. Install all dependencies.
+ ```bash
+    npm install
+```
+2. Update .env file with Application Insights Connection String and Azure Event Hub name and host.
+3. Start Docker running following command inside docker folder.
+    ```bash
+    docker compose up 
+    ```
+4. Build project 
+    ```bash
+    npm run build
+    ```
+5. Start server 
+    ```bash
+    npm run server
+    ```
 
-### Installation
-
-(ideally very short)
-
-- npm install [package name]
-- mvn install
-- ...
-
-### Quickstart
-(Add steps to get up and running quickly)
-
-1. git clone [repository clone url]
-2. cd [repository name]
-3. ...
-
-
-## Demo
-
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
 
 ## Resources
 

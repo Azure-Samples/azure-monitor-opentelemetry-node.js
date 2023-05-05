@@ -1,0 +1,37 @@
+{
+  "name": "azure-monitor-opentelemetry-node.js-example",
+  "version": "1.0.0",
+  "description": "Azure Monitor OpenTelemetry Node.js example",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "server": "node -r dotenv/config out/server.js",
+    "client": "node -r dotenv/config out/client.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Azure-Samples/azure-monitor-opentelemetry-node.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Azure-Samples/azure-monitor-opentelemetry-node.js/issues"
+  },
+  "homepage": "https://github.com/Azure-Samples/azure-monitor-opentelemetry-node.js#readme",
+  "dependencies": {
+    "@azure/event-hubs": "^5.8.0",
+    "@azure/identity": "^3.1.4",
+    "@opentelemetry/api": "^1.4.1",
+    "@opentelemetry/resources": "^1.12.0",
+    "@opentelemetry/sdk-metrics": "^1.12.0",
+    "@opentelemetry/sdk-trace-base": "^1.12.0",
+    "@opentelemetry/semantic-conventions": "^1.12.0",
+    "@types/node": "^16.9.1",
+    "applicationinsights": "3.0.0-beta.5",
+    "bunyan": "^1.8.15",
+    "dotenv": "^10.0.0",
+    "mysql": "^2.18.1",
+    "typescript": "^4.4.2",
+    "winston": "^3.8.2"
+  }
+}
