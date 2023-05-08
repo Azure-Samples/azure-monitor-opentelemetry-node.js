@@ -1,18 +1,6 @@
-# Project Name
+# Azure Monitor OpenTelemetry for Node.js
+Sample app demonstrating how to instrument your application with Azure Monitor OpenTelemetry.
 
-(short, 1-3 sentenced, description of the project)
-
-## Features
-
-This project framework provides the following features:
-
-* Feature 1
-* Feature 2
-* ...
-
-## Prerequisites
-
-* Make sure you have `tsc`, `grunt`, `mocha`, and `docker` installed globally.
 
 ## How to run the sample app
 
@@ -33,12 +21,17 @@ This project framework provides the following features:
     ```bash
     npm run server
     ```
+6. Start client 
+    ```bash
+    npm run client
+    ```
+
+7. Telemetry should be available and visible in Azure Portal in Application Resource which connection string was provided. To visualize telemetry exported through OTLP to Zipkin, you can use http://localhost:9411/zipkin
+
 
 
 ## Resources
 
-(Any additional resources or related projects)
 
-- Link to supporting information
-- Link to similar sample
-- ...
+- [OpenTelemetry Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-overview)
+- [Getting Started](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable?tabs=nodejs)
