@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as api from "@opentelemetry/api";
-
 // Load the .env file if it exists
 import * as dotenv from "dotenv";
 dotenv.config();
 
+import * as api from "@opentelemetry/api";
 import { getAppInsightsClient } from "./azureMonitor";
 
 /*********************************************************************
@@ -58,7 +57,7 @@ connection.connect((err) => {
     console.log("Failed to connect to DB, err:" + err);
   }
   else {
-    console.info("Bunyan DB Connected");
+    console.info("DB Connected");
   }
 });
 
