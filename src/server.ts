@@ -6,14 +6,13 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import * as api from "@opentelemetry/api";
-import { getAppInsightsClient } from "./azureMonitor";
+import { initializeTelemetry } from "./azureMonitor";
 
 /*********************************************************************
  *  OPEN TELEMETRY SETUP
  **********************************************************************/
-const azureMonitorClient = getAppInsightsClient();
-
-let metricCounter = azureMonitorClient.getMetricHandler().getCustomMetricsHandler().getMeter().createCounter("Manual Metric Counter");
+initializeTelemetry();
+let metricCounter = api.metrics.getMeter("testMeter").createCounter("Manual Metric Counter");
 
 // Open Telemetry setup need to happen before instrumented libraries are loaded
 import * as http from "http";
@@ -52,7 +51,7 @@ const connection = mysql.createConnection({
   database: mysqlDatabase,
 });
 
-connection.connect((err) => {
+connection.connect((err: any) => {
   if (err) {
     console.log("Failed to connect to DB, err:" + err);
   }
@@ -63,7 +62,7 @@ connection.connect((err) => {
 
 function handleConnectionQuery(response: any) {
   const query = 'SELECT 1 + 1 as solution';
-  connection.query(query, (err, results, _fields) => {
+  connection.query(query, (err: any, results: any, _fields: any) => {
     if (err) {
       console.log('Error code:', err.code);
       response.end(err.message);
