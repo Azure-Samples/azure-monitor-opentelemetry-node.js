@@ -12,7 +12,7 @@ import { initializeTelemetry } from "./azureMonitor";
  *  OPEN TELEMETRY SETUP
  **********************************************************************/
 initializeTelemetry();
-let metricCounter = api.metrics.getMeter("testMeter").createCounter("Manual Metric Counter");
+let metricCounter = api.metrics.getMeter("testMeter").createCounter("Manual_Metric_Counter");
 
 // Open Telemetry setup need to happen before instrumented libraries are loaded
 import * as http from "http";
@@ -31,8 +31,12 @@ const eventHubName = process.env["AZURE_EVENTHUB_NAME"] || "my-event-hub";
 const client = new EventHubProducerClient(eventHubHost, eventHubName, credential);
 
 async function handleEventHub(response: any) {
-  const partitionIds = await client.getPartitionIds();
-  response.end(JSON.stringify(partitionIds));
+  try {
+    const partitionIds = await client.getPartitionIds();
+    response.end(JSON.stringify(partitionIds));
+  } catch (error) {
+    response.end("EventHub error: " + error);
+  }
 }
 
 /*********************************************************************
@@ -56,22 +60,118 @@ connection.connect((err: any) => {
     console.log("Failed to connect to DB, err:" + err);
   }
   else {
-    console.info("DB Connected");
+    console.info("MySQL connnected");
   }
 });
 
 function handleConnectionQuery(response: any) {
-  const query = 'SELECT 1 + 1 as solution';
-  connection.query(query, (err: any, results: any, _fields: any) => {
-    if (err) {
-      console.log('Error code:', err.code);
-      response.end(err.message);
-    } else {
-      response.end(`${query}: ${results[0].solution}`);
-    }
-  });
+  try {
+    const query = 'SELECT 1 + 1 as solution';
+    connection.query(query, (err: any, results: any, _fields: any) => {
+      if (err) {
+        console.log('Error code:', err.code);
+        response.end(err.message);
+      } else {
+        response.end(`${query}: ${results[0].solution}`);
+      }
+    });
+  } catch (error) {
+    response.end("MySQL error: " + error);
+  }
 }
 
+/*********************************************************************
+ *  MONGO SETUP
+ **********************************************************************/
+const { MongoClient } = require("mongodb");
+const uri = "mongodb://root:example@localhost:27017/";
+let mongoClient: any;
+
+async function handleMongoConnection(response: any) {
+  try {
+    const myDB = mongoClient.db("myStateDB");
+    const myColl = myDB.collection("states");
+    const docs = [
+       { state: "Washington", coast: "west" },
+       { state: "New York", shape: "east" },
+       { state: "South Carolina", shape: "east" }
+    ];
+    const insertManyresult = await myColl.insertMany(docs);
+    let ids = insertManyresult.insertedIds;
+    console.log(`${insertManyresult.insertedCount} documents were inserted.`);
+    for (let id of Object.values(ids)) {
+      response.end(`Inserted a document with id ${id}`);
+    }
+  } catch (error) {
+    console.error("Error: " + error);
+    response.end("Error code: ", error.code);
+  }
+}
+
+try {
+  mongoClient = MongoClient.connect(uri);
+  console.log("Connected to Mongo");
+} catch (error) {
+  console.error("Mongo error: " + error);
+}
+/*********************************************************************
+ *  POSTGRES SETUP
+ **********************************************************************/
+let postgresUser = process.env["POSTGRES_USER"] || "admin";
+let postgresHost = process.env["POSTGRES_HOST"] || "localhost";
+let postgresDatabase = process.env["POSTGRES_DB"] || "test_db";
+let postgresPassword = process.env["POSTGRES_PASSWORD"] || "mypassword";
+let postgresPort = process.env["POSTGRES_PORT"] || 5432;
+
+const { Client } = require('pg');
+const pgClient = new Client({
+  user: postgresUser,
+  host: postgresHost,
+  database: postgresDatabase,
+  password: postgresPassword,
+  port: postgresPort,
+});
+pgClient.connect();
+console.log("Connected to Postgres");
+
+function handlePostgresConnection(response: any) {
+  try {
+    pgClient.query('SELECT NOW()', (err: any, res: any) => {
+      response.end(`Postgres connected and queried at ${res.rows[0].now}`)
+    });
+  } catch (error) {
+    response.end("Postgres error: " + error);
+  }
+}
+/*********************************************************************
+ *  REDIS SETUP
+ **********************************************************************/
+const { createClient } = require('redis');
+const redisClient = createClient();
+redisClient.connect();
+console.log("Connected to Redis");
+
+async function handleRedisConnection(response: any) {
+  try {
+    await redisClient.set('mykey', 'Hello from node redis');
+    const myKeyValue = await redisClient.get('mykey');
+    console.log(myKeyValue);
+
+    const numAdded = await redisClient.zAdd('vehicles', [
+      {
+        score: 4,
+        value: 'car',
+      },
+      {
+        score: 2,
+        value: 'bike',
+      },
+    ]);
+    response.end(`Added ${numAdded} items.`);
+  } catch (error) {
+    response.end("Error: " + error);
+  }
+}
 /*********************************************************************
  *  HTTP SERVER SETUP
  **********************************************************************/
@@ -103,6 +203,15 @@ function handleRequest(request: any, response: any) {
     }
     else if (request.url == '/mysql') {
       handleConnectionQuery(response);
+    }
+    else if (request.url == '/mongo') {
+      handleMongoConnection(response);
+    }
+    else if (request.url == '/postgres') {
+      handlePostgresConnection(response);
+    }
+    else if (request.url == '/redis') {
+      handleRedisConnection(response);
     }
     else if (request.url == '/http') {
       http.get(

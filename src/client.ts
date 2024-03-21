@@ -27,6 +27,9 @@ setInterval(() => {
   makeRequest("/");
   makeRequest("/eventhub");
   makeRequest("/mysql");
+  makeRequest("/mongo");
+  makeRequest("/postgres");
+  makeRequest("/redis");
   makeRequest("/http");
   makeRequest("/span");
   makeRequest("/exception");
