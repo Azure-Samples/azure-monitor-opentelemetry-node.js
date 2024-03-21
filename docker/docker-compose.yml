@@ -16,6 +16,29 @@ services:
       MYSQL_DATABASE: opentelemetry-tests
     volumes:
       - my-db:/var/lib/mysql
+  
+  # MONGO
+  mongo:
+    image: mongo
+    container_name: "mongo"
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - './dockervolume/mongodb:/data/db'
+    ports:
+      - 27017:27017
+  
+  # POSTGRES
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: admin
+      POSTGRES_DB: test_db
 
   # REDIS
   redis:

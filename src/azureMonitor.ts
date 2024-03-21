@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 import { useAzureMonitor, AzureMonitorOpenTelemetryOptions } from "@azure/monitor-opentelemetry";
 import { trace, metrics, Span, SpanKind, TraceFlags, ProxyTracerProvider } from '@opentelemetry/api';
-import { logs } from '@opentelemetry/api-logs';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { Resource } from "@opentelemetry/resources";
-import { SemanticAttributes, SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { SEMATTRS_ENDUSER_ID, SEMATTRS_HTTP_CLIENT_IP, SEMRESATTRS_SERVICE_INSTANCE_ID, SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_NAMESPACE, SemanticAttributes, SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { BatchSpanProcessor, ReadableSpan, SpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
-import { Logger } from "@opentelemetry/sdk-logs";
 import { HttpInstrumentationConfig } from "@opentelemetry/instrumentation-http";
 import { FsInstrumentation } from '@opentelemetry/instrumentation-fs';
 import { IncomingMessage } from "http";
@@ -41,9 +38,9 @@ export function initializeTelemetry() {
     // ----------------------------------------
     // Setting role name and role instance
     // ----------------------------------------
-    customResource.attributes[SemanticResourceAttributes.SERVICE_NAME] = "my-helloworld-service";
-    customResource.attributes[SemanticResourceAttributes.SERVICE_NAMESPACE] = "my-namespace";
-    customResource.attributes[SemanticResourceAttributes.SERVICE_INSTANCE_ID] = "my-instance";
+    customResource.attributes[SEMRESATTRS_SERVICE_NAME] = "my-helloworld-service";
+    customResource.attributes[SEMRESATTRS_SERVICE_NAMESPACE] = "my-namespace";
+    customResource.attributes[SEMRESATTRS_SERVICE_INSTANCE_ID] = "my-instance";
 
     const options: AzureMonitorOpenTelemetryOptions = {
         // Sampling could be configured here
@@ -62,30 +59,15 @@ export function initializeTelemetry() {
         },
     };
 
+    addSpanProcessor(options);
+    addOTLPExporter(options);
     useAzureMonitor(options);
 
     // Need client to be created
     addOpenTelemetryInstrumentation();
-    addSpanProcessor();
-    addOTLPExporter();
 }
-
-export function sendLogEvent() {
-    const logger = (logs.getLogger("testLogger") as Logger);
-    const logRecord = {
-        body: "testEvent",
-        attributes: {
-            "testAttribute1": "testValue1",
-            "testAttribute2": "testValue2",
-            "testAttribute3": "testValue3"
-        }
-    };
-    logger.emit(logRecord);
-}
-
 
 function addOpenTelemetryInstrumentation() {
-
     const tracerProvider = (trace.getTracerProvider() as ProxyTracerProvider).getDelegate();
     const meterProvider = metrics.getMeterProvider();
     registerInstrumentations({
@@ -97,7 +79,7 @@ function addOpenTelemetryInstrumentation() {
     });
 }
 
-function addSpanProcessor() {
+function addSpanProcessor(options: AzureMonitorOpenTelemetryOptions) {
     // Custom SpanProcessor class
     class SpanEnrichingProcessor implements SpanProcessor {
         forceFlush(): Promise<void> {
@@ -118,17 +100,24 @@ function addSpanProcessor() {
             else {
                 span.attributes["CustomDimension1"] = "value1";
                 span.attributes["CustomDimension2"] = "value2";
-                span.attributes[SemanticAttributes.HTTP_CLIENT_IP] = "<IP Address>";
-                span.attributes[SemanticAttributes.ENDUSER_ID] = "<User ID>";
+                span.attributes[SEMATTRS_HTTP_CLIENT_IP] = "<IP Address>";
+                span.attributes[SEMATTRS_ENDUSER_ID] = "<User ID>";
             }
         }
     }
-    const tracerProvider = ((trace.getTracerProvider() as ProxyTracerProvider).getDelegate() as NodeTracerProvider);
-    tracerProvider.addSpanProcessor(new SpanEnrichingProcessor());
+    if (options.spanProcessors?.length > 0) {
+        options.spanProcessors.push(new SpanEnrichingProcessor());
+    } else {
+        options.spanProcessors = [new SpanEnrichingProcessor()];
+    
+    }
 }
 
-function addOTLPExporter() {
+function addOTLPExporter(options: AzureMonitorOpenTelemetryOptions) {
     const traceExporter = new OTLPTraceExporter();
-    const tracerProvider = ((trace.getTracerProvider() as ProxyTracerProvider).getDelegate() as NodeTracerProvider);
-    tracerProvider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
+    if (options.spanProcessors?.length > 0) {
+        options.spanProcessors.push(new BatchSpanProcessor(traceExporter));
+    } else {
+        options.spanProcessors = [new BatchSpanProcessor(traceExporter)];
+    }
 }
