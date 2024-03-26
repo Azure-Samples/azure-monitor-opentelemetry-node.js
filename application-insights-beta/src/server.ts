@@ -8,11 +8,22 @@ dotenv.config();
 import * as api from "@opentelemetry/api";
 import { initializeTelemetry } from "./azureMonitor";
 
+const { useAzureMonitor } = require("applicationinsights");
+
+const config = {
+    azureMonitorExporterOptions: {
+        connectionString: process.env["APPLICATIONINSIGHTS_CONNECTION_STRING"] || "<your connection string>"
+    },
+};
+useAzureMonitor(config);
+
+
 /*********************************************************************
  *  OPEN TELEMETRY SETUP
  **********************************************************************/
 initializeTelemetry();
 let metricCounter = api.metrics.getMeter("testMeter").createCounter("Manual_Metric_Counter");
+
 
 // Open Telemetry setup need to happen before instrumented libraries are loaded
 import * as http from "http";
@@ -20,6 +31,30 @@ import * as mysql from "mysql";
 import { EventHubProducerClient } from "@azure/event-hubs";
 import { DefaultAzureCredential } from "@azure/identity";
 
+/*********************************************************************
+ *  BUNYAN LOGGER SETUP
+ **********************************************************************/
+const bunyan = require("bunyan");
+const log = bunyan.createLogger({ name: "testapp" });
+
+function logBunyan() {
+  log.info("Hello from bunyan");
+}
+
+/*********************************************************************
+ *  WINSTON LOGGER SETUP
+ **********************************************************************/
+const winston = require('winston');
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  defaultMeta: { service: 'user-service' },
+});
+
+logger.log({
+  level: 'info',
+  message: 'Hello from winston',
+});
 
 /*********************************************************************
  *  AZURE EVENTHUB SETUP
@@ -85,35 +120,20 @@ function handleConnectionQuery(response: any) {
  **********************************************************************/
 const { MongoClient } = require("mongodb");
 const uri = "mongodb://root:example@localhost:27017/";
-let mongoClient: any;
 
 async function handleMongoConnection(response: any) {
-  try {
-    const myDB = mongoClient.db("myStateDB");
-    const myColl = myDB.collection("states");
-    const docs = [
-       { state: "Washington", coast: "west" },
-       { state: "New York", shape: "east" },
-       { state: "South Carolina", shape: "east" }
-    ];
-    const insertManyresult = await myColl.insertMany(docs);
-    let ids = insertManyresult.insertedIds;
-    console.log(`${insertManyresult.insertedCount} documents were inserted.`);
-    for (let id of Object.values(ids)) {
-      response.end(`Inserted a document with id ${id}`);
-    }
-  } catch (error) {
-    console.error("Error: " + error);
-    response.end("Error code: ", error.code);
-  }
+  MongoClient.connect(uri, function(err: any, db: any) {
+    if (err) throw err;
+    var dbo = db.db("myStateDB");
+    var myobj = { name: "Company Inc", address: "Highway 37" };
+    dbo.collection("customers").insertOne(myobj, function(err: any, res: any) {
+      if (err) throw err;
+      db.close();
+    });
+    response.end("1 MongoDB document inserted");
+  });
 }
 
-try {
-  mongoClient = MongoClient.connect(uri);
-  console.log("Connected to Mongo");
-} catch (error) {
-  console.error("Mongo error: " + error);
-}
 /*********************************************************************
  *  POSTGRES SETUP
  **********************************************************************/
@@ -275,6 +295,17 @@ function handleRequest(request: any, response: any) {
     else if (request.url == '/metric') {
 
       metricCounter.add(1);
+    }
+    else if (request.url == '/bunyan') {
+      logBunyan();
+      response.end("Logged from bunyan");
+    }
+    else if (request.url == '/winston') {
+      logger.log({
+        level: 'info',
+        message: 'Hello from winston',
+      });
+      response.end("Logged from winston");
     }
   });
 }

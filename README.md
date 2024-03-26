@@ -1,6 +1,7 @@
 # Azure Monitor OpenTelemetry for Node.js
 Sample app demonstrating how to instrument your application with Azure Monitor OpenTelemetry.
 
+Contains both samples for the Application Insights 3.x beta and the Application Insights shim for Application Insights 2.x APIs.
 
 ## How to run the sample app
 
