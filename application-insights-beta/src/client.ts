@@ -34,5 +34,7 @@ setInterval(() => {
   makeRequest("/span");
   makeRequest("/exception");
   makeRequest("/metric");
+  makeRequest("/bunyan");
+  makeRequest("/winston");
 }, 10000)
 

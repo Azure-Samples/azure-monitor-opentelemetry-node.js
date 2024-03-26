@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "server": "node -r dotenv/config out/server.js",
-    "client": "node -r dotenv/config out/client.js"
+    "server": "node -r ./src/out/server.js",
+    "client": "node -r ./src/out/client.js"
   },
   "repository": {
     "type": "git",
@@ -32,12 +32,15 @@
     "@opentelemetry/sdk-trace-base": "^1.22.0",
     "@opentelemetry/semantic-conventions": "^1.22.0",
     "@types/node": "^16.9.1",
+    "applicationinsights": "^3.0.0-beta.12",
+    "bunyan": "^1.8.15",
     "dotenv": "^10.0.0",
-    "mongodb": "^6.5.0",
+    "mongodb": "^3.6.10",
     "mysql": "^2.18.1",
     "pg": "^8.11.3",
     "redis": "^4.6.13",
-    "typescript": "^4.4.2"
+    "typescript": "^4.4.2",
+    "winston": "^3.13.0"
   },
   "devDependencies": {
     "@types/mysql": "^2.15.21"

@@ -7,7 +7,7 @@
       "sourceMap": true,
       "declaration": true,
       "noImplicitAny": true,
-      "outDir": "./out",
+      "outDir": "src/out",
       "typeRoots": [
         "./node_modules/@types"
       ]
@@ -19,4 +19,3 @@
       "node_modules"
     ]
   }
-  
